@@ -1,0 +1,170 @@
+//makes that main gets installed/builded first (not needed because of evaluation)
+//install.dependsOn(':QuarkFX-Main:install')
+//build.dependsOn(':QuarkFX-Main:build')
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.12.0'
+    }
+}
+
+//dependency version
+ext {
+    charm_version = '3.0.0'
+    gson_version = '2.6.2'
+    javafxports_version = '8.60.7'
+    afterburner_version = '1.6.2'
+    junit_version = '4.12'
+    mockito_version = '2.0.0-beta'
+    powermock_version = '1.6.5'
+}
+
+//gluon dependencies
+List gluon = [
+        "com.google.code.gson:gson:$gson_version",
+        "com.gluonhq:charm:$charm_version",
+
+        //TODO compileOnly?
+        "org.jetbrains:annotations:15.0"
+        //"com.airhacks:afterburner.mfx:$afterburner_version",
+]
+
+//android dependencies
+List android = [
+        "org.javafxports:jfxdvk:$javafxports_version",
+        "com.gluonhq:charm-android:$charm_version"
+]
+
+//testing dependencies
+List testing = [
+        "junit:junit:$junit_version",
+        "org.mockito:mockito-core:$mockito_version",
+        //"org.powermock:powermock-module-junit4:$powermock_version",
+        //"org.powermock:powermock-api-mockito2:$powermock_version"
+]
+
+allprojects {
+    //everybody has same version and group
+    group 'com.zeiss.quarkfx'
+    version '1.0.0-alpha'
+
+    apply plugin: 'maven'
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'com.github.ben-manes.versions'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    if (name == 'QuarkFX-Main' || name == 'QuarkFX-Android') {
+        sourceCompatibility = 1.7
+        targetCompatibility = 1.7
+    }
+
+    repositories {
+        jcenter()
+        mavenCentral()
+        mavenLocal();
+        maven {
+            url 'http://nexus.gluonhq.com/nexus/content/repositories/releases'
+        }
+    }
+
+    dependencies {
+        compileOnly gluon
+        testCompile testing
+        testCompile gluon
+    }
+    if (name != 'QuarkFX-Main') {
+        evaluationDependsOn(':QuarkFX-Main')
+        dependencies {
+            compile project(':QuarkFX-Main')
+            testCompile project(':QuarkFX-Main')
+        }
+    }
+}
+
+project(':QuarkFX-Android') {
+    dependencies {
+        compileOnly android
+        testCompile android
+    }
+}
+
+task listJars << {
+    subprojects {
+        println()
+        println('Module: ' + project.name)
+        configurations.compile.each { File file -> println file.name }
+    }
+}
+
+/*task sourcesJar(type: Jar) {
+//    dependsOn classes
+    classifier "sources"
+    from sourceSets.main.allSource
+    from(projectDir) {
+        include "*.txt"
+        into "META-INF"
+    }
+}*/
+
+/*task sourcesJar(type: Jar) {
+    doFirst {
+        println("TROLOLOL")
+    }
+    subprojects {
+        from sourceSets.main.allSource
+        classifier = 'sources'
+    }
+}
+
+artifacts {
+//    archives jar //normal classes
+    archives sourcesJar //source code
+}*/
+
+task sourcesJar(type: Jar/*, dependsOn:classes*/) {
+    doFirst {
+        println("TROLOLOL")
+    }
+    subprojects {
+        dependsOn classes
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+}
+
+task javadocJar(type: Jar/*, dependsOn:javadoc*/) {
+    subprojects {
+        dependsOn javadoc
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: "file://localhost/Users/ogldombe/.m2/repository")
+        }
+    }
+}
+
+/*gradle.taskGraph.whenReady { taskGraph ->
+    if (!taskGraph.hasTask(':release')) {
+        version = version + '-SNAPSHOT'
+    }
+}*/

@@ -1,0 +1,3 @@
+rootProject.name = 'QuarkFX'
+include 'QuarkFX-Main', 'QuarkFX-Desktop', 'QuarkFX-Ios', 'QuarkFX-Android'
+
