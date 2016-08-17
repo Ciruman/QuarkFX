@@ -22,10 +22,6 @@ public class OrientationEventDispatcher {
         double dpiFac = Screen.getPrimary().getBounds().getHeight() / Screen.getPrimary().getVisualBounds().getHeight();
 
         handler.checkDPI(dpiFac);
-        final double width = region.getWidth();
-        final double height = region.getHeight();
-        handler.checkSize(width, height);
-        handler.checkOrientation(width, height);
 
         //If the height/width changes --> check if the orientation ist still correct
         region.widthProperty().addListener(new ChangeListener<Number>() {
@@ -41,6 +37,7 @@ public class OrientationEventDispatcher {
             }
         });
 
+        updateHandler(handler, region.getWidth(), region.getHeight());
     }
 
     private static void updateHandler(OrientationHandler handler, final double width, final double height) {
